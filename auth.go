@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -112,7 +113,20 @@ type AWSRequest struct {
 }
 
 // Build new *AWSRequest
-func NewAWSRequest(r *http.Request, region, key, secret, service string) *AWSRequest {
+func NewAWSRequest(r *http.Request, key, secret string) (*AWSRequest, error) {
+	parts := strings.Split(r.Host, ".")
+
+	if len(parts) < 3 {
+		return nil, errors.New("URL must have at least 2 dots.")
+	}
+
+	region := "us-east-1"
+	service := parts[0]
+
+	if len(parts) == 4 {
+		region = parts[1]
+	}
+
 	aReq := &AWSRequest{
 		Request:   r,
 		Region:    region,
@@ -123,7 +137,7 @@ func NewAWSRequest(r *http.Request, region, key, secret, service string) *AWSReq
 	}
 
 	aReq.setDefaultHeaders()
-	return aReq
+	return aReq, nil
 }
 
 func (a *AWSRequest) SetDate(d time.Time) {

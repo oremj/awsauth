@@ -20,7 +20,10 @@ func buildTestRequest(t *testing.T) *AWSRequest {
 		t.Fatal(err)
 	}
 
-	awsR := NewAWSRequest(r, "us-east-1", testAccessKey, testSecret, "iam")
+	awsR, err := NewAWSRequest(r, testAccessKey, testSecret)
+	if err != nil {
+		t.Fatal(err)
+	}
 	awsR.SetDate(reqDate)
 	return awsR
 }
