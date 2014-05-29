@@ -24,7 +24,9 @@ func buildTestRequest(t *testing.T) *AWSRequest {
 	if err != nil {
 		t.Fatal(err)
 	}
-	awsR.SetDate(reqDate)
+	awsR.date = reqDate
+	awsR.setDefaultHeaders()
+
 	return awsR
 }
 

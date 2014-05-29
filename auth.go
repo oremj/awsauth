@@ -140,11 +140,6 @@ func NewAWSRequest(r *http.Request, key, secret string) (*AWSRequest, error) {
 	return aReq, nil
 }
 
-func (a *AWSRequest) SetDate(d time.Time) {
-	a.date = d
-	a.setDefaultHeaders()
-}
-
 func (a *AWSRequest) setDefaultHeaders() {
 	a.Header.Set("Host", a.Host)
 	a.Header.Set("x-amz-date", a.date.Format(ISO8601Format))
