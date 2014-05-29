@@ -111,6 +111,7 @@ type AWSRequest struct {
 	date      time.Time
 }
 
+// Build new *AWSRequest
 func NewAWSRequest(r *http.Request, region, key, secret, service string) *AWSRequest {
 	return &AWSRequest{
 		Request:   r,
@@ -150,6 +151,7 @@ func (a *AWSRequest) signingKey() []byte {
 	return hmacBytes(kService, []byte("aws4_request"))
 }
 
+// Generate request signature.
 func (a *AWSRequest) Signature() string {
 	s2s := a.stringToSign()
 
@@ -157,6 +159,7 @@ func (a *AWSRequest) Signature() string {
 	return fmt.Sprintf("%x", hmacBytes(key, s2s))
 }
 
+// Add Authorization header to wrapped *http.Request
 func (a *AWSRequest) Sign() {
 	authHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s", a.AccessKey, a.credentialScope(), signedHeaders(a.Request), a.Signature())
 
