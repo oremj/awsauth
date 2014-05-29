@@ -1,4 +1,4 @@
-package goaws
+package awsauth
 
 import (
 	"net/http"
@@ -56,6 +56,4 @@ func TestSign(t *testing.T) {
 	if authHeader != "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/iam/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=ced6826de92d2bdeed8f846f0bf508e8559e98e4b0199114b84c54174deb456c" {
 		t.Errorf("incorrect Authorization header: ", authHeader)
 	}
-	println(authHeader)
-
 }
