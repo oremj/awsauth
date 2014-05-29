@@ -113,17 +113,36 @@ type AWSRequest struct {
 
 // Build new *AWSRequest
 func NewAWSRequest(r *http.Request, region, key, secret, service string) *AWSRequest {
-	return &AWSRequest{
+	aReq := &AWSRequest{
 		Request:   r,
 		Region:    region,
 		AccessKey: key,
 		Secret:    secret,
 		Service:   service,
-		date:      time.Now(),
+		date:      time.Now().UTC(),
+	}
+
+	aReq.setDefaultHeaders()
+	return aReq
+}
+
+func (a *AWSRequest) SetDate(d time.Time) {
+	a.date = d
+	a.setDefaultHeaders()
+}
+
+func (a *AWSRequest) setDefaultHeaders() {
+	a.Header.Set("Host", a.Host)
+	a.Header.Set("x-amz-date", a.date.Format(ISO8601Format))
+
+	if a.Method == "POST" {
+		a.Header.Set("Content-type", "application/x-www-form-urlencoded; charset=utf-8")
 	}
 }
 
 func (a *AWSRequest) stringToSign() []byte {
+	a.setDefaultHeaders()
+
 	hashedReq := hashCanonicalRequest(a.Request)
 	buf := new(bytes.Buffer)
 	buf.WriteString("AWS4-HMAC-SHA256\n")

@@ -20,12 +20,8 @@ func buildTestRequest(t *testing.T) *AWSRequest {
 		t.Fatal(err)
 	}
 
-	r.Header.Add("host", "iam.amazonaws.com")
-	r.Header.Add("Content-type", "application/x-www-form-urlencoded; charset=utf-8")
-	r.Header.Add("x-amz-date", reqDate.Format(ISO8601Format))
-
 	awsR := NewAWSRequest(r, "us-east-1", testAccessKey, testSecret, "iam")
-	awsR.date = reqDate
+	awsR.SetDate(reqDate)
 	return awsR
 }
 
