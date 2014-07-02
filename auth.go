@@ -89,10 +89,12 @@ func hashSha256(b io.Reader) []byte {
 
 func hashedRequestPayload(r *http.Request) []byte {
 	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(r.Body); err != nil {
-		panic(err)
+	if r.Body != nil {
+		if _, err := buf.ReadFrom(r.Body); err != nil {
+			panic(err)
+		}
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(buf.Bytes()))
 	}
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(buf.Bytes()))
 
 	return hashSha256(buf)
 }
