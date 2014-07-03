@@ -110,7 +110,7 @@ type AWSRequest struct {
 	AccessKey string
 	Region    string
 	Service   string
-	Secret    string
+	SecretKey string
 	date      time.Time
 }
 
@@ -133,7 +133,7 @@ func NewAWSRequest(r *http.Request, key, secret string) (*AWSRequest, error) {
 		Request:   r,
 		Region:    region,
 		AccessKey: key,
-		Secret:    secret,
+		SecretKey: secret,
 		Service:   service,
 		date:      time.Now().UTC(),
 	}
@@ -175,7 +175,7 @@ func (a *AWSRequest) credentialScope() []byte {
 }
 
 func (a *AWSRequest) signingKey() []byte {
-	kDate := hmacBytes([]byte("AWS4"+a.Secret), []byte(a.date.Format("20060102")))
+	kDate := hmacBytes([]byte("AWS4"+a.SecretKey), []byte(a.date.Format("20060102")))
 	kRegion := hmacBytes(kDate, []byte(a.Region))
 	kService := hmacBytes(kRegion, []byte(a.Service))
 	return hmacBytes(kService, []byte("aws4_request"))
