@@ -1,26 +1,21 @@
 package awsauth
 
-import (
-	"net/http"
-	"os"
-)
+import "net/http"
 
 type AWSClient struct {
-	AccessKey string
-	SecretKey string
-	Client    *http.Client
+	Client *http.Client
+	Creds  *Credentials
 }
 
 func NewAWSClientFromEnv(c *http.Client) *AWSClient {
 	return &AWSClient{
-		AccessKey: os.Getenv("AWS_ACCESS_KEY_ID"),
-		SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		Client:    c,
+		Client: c,
+		Creds:  NewCredentialsFromEnv(),
 	}
 }
 
 func (a *AWSClient) Do(req *http.Request) (*http.Response, error) {
-	awsReq, err := NewAWSRequest(req, a.AccessKey, a.SecretKey)
+	awsReq, err := NewAWSRequest(req, a.Creds)
 	if err != nil {
 		return nil, err
 	}

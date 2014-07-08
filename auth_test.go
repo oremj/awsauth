@@ -2,6 +2,7 @@ package awsauth
 
 import (
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +14,9 @@ const testSecret = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 var reqDate, _ = time.Parse(ISO8601Format, "20110909T233600Z")
 
 func buildTestRequest(t *testing.T) *AWSRequest {
+	os.Setenv("AWS_ACCESS_KEY_ID", testAccessKey)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", testSecret)
+
 	body := "Action=ListUsers&Version=2010-05-08"
 
 	r, err := http.NewRequest("POST", "http://iam.amazonaws.com/", strings.NewReader(body))
@@ -20,7 +24,7 @@ func buildTestRequest(t *testing.T) *AWSRequest {
 		t.Fatal(err)
 	}
 
-	awsR, err := NewAWSRequest(r, testAccessKey, testSecret)
+	awsR, err := NewAWSRequest(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -107,15 +107,17 @@ func hmacBytes(key, data []byte) []byte {
 
 type AWSRequest struct {
 	*http.Request
-	AccessKey string
-	Region    string
-	Service   string
-	SecretKey string
-	date      time.Time
+	Creds   *Credentials
+	Region  string
+	Service string
+	date    time.Time
 }
 
 // Build new *AWSRequest
-func NewAWSRequest(r *http.Request, key, secret string) (*AWSRequest, error) {
+// If creds == nil, they will be assigned from
+//   AccessKey: os.Getenv("AWS_ACCESS_KEY_ID"),
+//   SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+func NewAWSRequest(r *http.Request, creds *Credentials) (*AWSRequest, error) {
 	parts := strings.Split(r.Host, ".")
 
 	if len(parts) < 3 {
@@ -129,13 +131,16 @@ func NewAWSRequest(r *http.Request, key, secret string) (*AWSRequest, error) {
 		region = parts[1]
 	}
 
+	if creds == nil {
+		creds = NewCredentialsFromEnv()
+	}
+
 	aReq := &AWSRequest{
-		Request:   r,
-		Region:    region,
-		AccessKey: key,
-		SecretKey: secret,
-		Service:   service,
-		date:      time.Now().UTC(),
+		Creds:   creds,
+		Request: r,
+		Region:  region,
+		Service: service,
+		date:    time.Now().UTC(),
 	}
 
 	aReq.setDefaultHeaders()
@@ -143,7 +148,9 @@ func NewAWSRequest(r *http.Request, key, secret string) (*AWSRequest, error) {
 }
 
 func (a *AWSRequest) setDefaultHeaders() {
-	a.Header.Set("Host", a.Host)
+	if a.Header.Get("Host") == "" {
+		a.Header.Set("Host", a.Host)
+	}
 	a.Header.Set("x-amz-date", a.date.Format(ISO8601Format))
 
 	if a.Method == "POST" {
@@ -175,7 +182,7 @@ func (a *AWSRequest) credentialScope() []byte {
 }
 
 func (a *AWSRequest) signingKey() []byte {
-	kDate := hmacBytes([]byte("AWS4"+a.SecretKey), []byte(a.date.Format("20060102")))
+	kDate := hmacBytes([]byte("AWS4"+a.Creds.SecretKey), []byte(a.date.Format("20060102")))
 	kRegion := hmacBytes(kDate, []byte(a.Region))
 	kService := hmacBytes(kRegion, []byte(a.Service))
 	return hmacBytes(kService, []byte("aws4_request"))
@@ -191,7 +198,19 @@ func (a *AWSRequest) Signature() string {
 
 // Add Authorization header to wrapped *http.Request
 func (a *AWSRequest) Sign() {
-	authHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s", a.AccessKey, a.credentialScope(), signedHeaders(a.Request), a.Signature())
+	authHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s", a.Creds.AccessKey, a.credentialScope(), signedHeaders(a.Request), a.Signature())
 
 	a.Header.Set("Authorization", authHeader)
+}
+
+// Sign an *http.Request. If creds == nil, they will be assigned from
+//   AccessKey: os.Getenv("AWS_ACCESS_KEY_ID"),
+//   SecretKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+func SignRequest(req *http.Request, creds *Credentials) error {
+	aws, err := NewAWSRequest(req, creds)
+	if err != nil {
+		return err
+	}
+	aws.Sign()
+	return nil
 }
